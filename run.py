@@ -7,7 +7,7 @@ import yolov7
 import os
 import json
 import sys
-
+import random
 from haishoku.haishoku import Haishoku # for detecting the dominant color
 from PIL import Image
 import numpy as np
@@ -119,6 +119,7 @@ def per_human_predictor(human_detector, clothing_detector, feature_extractor, im
         for p, bbox in zip(probas[keep], boxes):
             single_element = {}
             single_element["object_name"] = idx_to_text(p.argmax())
+            single_element["probability"] = float(p.max())
             single_element["relative_bbox"] = bbox
             absolute_bbox = []
             for i in range(2):
@@ -130,8 +131,6 @@ def per_human_predictor(human_detector, clothing_detector, feature_extractor, im
         single_human_elements = {"human_bbox": hd, "elements": elements}
         results.append(single_human_elements)
     return results
-
-import random
 
 def process_predictions(probas, bboxes, x_tl, y_tl):
   detections = []
@@ -399,13 +398,8 @@ def get_cloth_from_image(image, bbox):
     return image_cropped
 
 
-# usage
-MODEL_NAME = "valentinafeve/yolos-fashionpedia"
-feature_extractor = YolosFeatureExtractor.from_pretrained('hustvl/yolos-small')
-model = YolosForObjectDetection.from_pretrained(MODEL_NAME)
-PERSON_ID = 0
-
 # load pretrained or custom model
+PERSON_ID = 0
 human_detector = yolov7.load('kadirnar/yolov7-v0.1', hf_model=True)
 
 # set model parameters
@@ -446,8 +440,14 @@ import argparse
 parser = argparse.ArgumentParser(prog="Clothing analyser", description="Analyse pictures in a directory, detecting persons, their clothes and colors of their clothes")
 parser.add_argument("input_dir", help="Path to directory containing the images to analyse.")
 parser.add_argument("-o", "--output-file", help="File to dump the results of the analysis. Print out to stout if not provided.")
+parser.add_argument("-m", "--clothing-detection-model", default="itesl/yolos-tiny-fashionpedia-remapped", help="Huggingface model to use for clothing detection")
 
 args = parser.parse_args()
+
+# usage
+MODEL_NAME = args.clothing_detection_model
+feature_extractor = YolosFeatureExtractor.from_pretrained('hustvl/yolos-small') #
+model = YolosForObjectDetection.from_pretrained(MODEL_NAME)
 
 results = process_directory(args.input_dir)
 
