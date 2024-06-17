@@ -1,0 +1,8 @@
+# Python version Python 3.11.8
+transformers
+torch
+torchvision
+yolov7detect
+rembg
+haishoku
+numpy<2.0
